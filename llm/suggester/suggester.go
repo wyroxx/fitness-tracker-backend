@@ -76,7 +76,7 @@ func (s *Suggester) Suggest(history string) (string, error) {
 		Model: s.modelName,
 		Messages: []ChatMessage{
 			{Role: "user", Content: fmt.Sprintf("Based on this workout history, suggest the next workout: %s."+
-				"\nYour responce should be conciese and include 3-5 sentences", history)},
+				"\nYour response should be concise and include 3-5 sentences.", history)},
 		},
 	}
 	b, _ := json.Marshal(reqBody)

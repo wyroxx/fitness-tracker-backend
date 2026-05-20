@@ -108,7 +108,7 @@ func main() {
 		log.Printf("warning: failed to pull model %s: %v", modelName, err)
 	}
 
-	suggestHandler := workouthandler.NewSuggestHandler(workoutSessionRepo, suggester.New(ollamaURL, modelName))
+	suggestHandler := workouthandler.NewSuggestHandler(trainingRepo, suggester.New(ollamaURL, modelName))
 
 	router := gin.Default()
 
