@@ -13,5 +13,7 @@ type WorkoutTypeRepository interface {
 	Update(ctx context.Context, wt *models.WorkoutType) error
 	Delete(ctx context.Context, id uint) error
 	List(ctx context.Context, limit, offset int) ([]*models.WorkoutType, error)
+	ListByMuscleGroup(ctx context.Context, muscleGroupID uint, limit, offset int) ([]*models.WorkoutType, error)
+	Search(ctx context.Context, query string, muscleGroupID *uint, limit, offset int) ([]*models.WorkoutType, error)
 	Count(ctx context.Context) (int, error)
 }

@@ -49,6 +49,10 @@ type refreshRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
+type errorResponse struct {
+	Error string `json:"error"`
+}
+
 // Login
 // @Summary      User login
 // @Description  Authenticates user credentials and returns JWT pair
@@ -57,8 +61,8 @@ type refreshRequest struct {
 // @Produce      json
 // @Param        payload  body      loginRequest   true  "Credentials"
 // @Success      200      {object}  tokenResponse
-// @Failure      400      {object}  gin.H
-// @Failure      401      {object}  gin.H
+// @Failure      400      {object}  errorResponse
+// @Failure      401      {object}  errorResponse
 // @Router       /auth/login [post]
 func (h *AuthHandler) login(c *gin.Context) {
 	var req loginRequest
@@ -84,8 +88,8 @@ func (h *AuthHandler) login(c *gin.Context) {
 // @Produce      json
 // @Param        payload  body      refreshRequest  true  "Refresh token"
 // @Success      200      {object}  tokenResponse
-// @Failure      400      {object}  gin.H
-// @Failure      401      {object}  gin.H
+// @Failure      400      {object}  errorResponse
+// @Failure      401      {object}  errorResponse
 // @Router       /auth/refresh [post]
 func (h *AuthHandler) refresh(c *gin.Context) {
 	var req refreshRequest

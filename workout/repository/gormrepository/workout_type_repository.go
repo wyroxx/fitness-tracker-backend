@@ -2,6 +2,7 @@ package gormrepository
 
 import (
 	"context"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -42,7 +43,37 @@ func (r *gormWorkoutTypeRepository) Delete(ctx context.Context, id uint) error {
 
 func (r *gormWorkoutTypeRepository) List(ctx context.Context, limit, offset int) ([]*models.WorkoutType, error) {
 	var wts []*models.WorkoutType
-	err := r.db.WithContext(ctx).Preload("MuscleGroup").Limit(limit).Offset(offset).Find(&wts).Error
+	err := r.db.WithContext(ctx).
+		Preload("MuscleGroup").
+		Order("name ASC").
+		Limit(limit).
+		Offset(offset).
+		Find(&wts).Error
+	return wts, err
+}
+
+func (r *gormWorkoutTypeRepository) ListByMuscleGroup(ctx context.Context, muscleGroupID uint, limit, offset int) ([]*models.WorkoutType, error) {
+	var wts []*models.WorkoutType
+	err := r.db.WithContext(ctx).
+		Where("muscle_group_id = ?", muscleGroupID).
+		Preload("MuscleGroup").
+		Order("name ASC").
+		Limit(limit).
+		Offset(offset).
+		Find(&wts).Error
+	return wts, err
+}
+
+func (r *gormWorkoutTypeRepository) Search(ctx context.Context, query string, muscleGroupID *uint, limit, offset int) ([]*models.WorkoutType, error) {
+	var wts []*models.WorkoutType
+	db := r.db.WithContext(ctx).Preload("MuscleGroup").Order("name ASC")
+	if muscleGroupID != nil {
+		db = db.Where("muscle_group_id = ?", *muscleGroupID)
+	}
+	if trimmed := strings.TrimSpace(query); trimmed != "" {
+		db = db.Where("lower(name) LIKE ?", "%"+strings.ToLower(trimmed)+"%")
+	}
+	err := db.Limit(limit).Offset(offset).Find(&wts).Error
 	return wts, err
 }
 

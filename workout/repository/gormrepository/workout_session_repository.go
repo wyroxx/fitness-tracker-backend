@@ -27,7 +27,10 @@ func (r *gormWorkoutSessionRepository) GetByID(ctx context.Context, id uint) (*m
 	var session models.WorkoutSession
 	err := r.db.WithContext(ctx).
 		Preload("WorkoutType").
-		Preload("Details").
+		Preload("WorkoutType.MuscleGroup").
+		Preload("Sets", func(db *gorm.DB) *gorm.DB {
+			return db.Order("set_number ASC").Order("id ASC")
+		}).
 		First(&session, id).Error
 	if err != nil {
 		return nil, err
@@ -51,7 +54,25 @@ func (r *gormWorkoutSessionRepository) ListByUser(ctx context.Context, userID ui
 		Limit(limit).
 		Offset(offset).
 		Preload("WorkoutType").
-		Preload("Details").
+		Preload("WorkoutType.MuscleGroup").
+		Preload("Sets", func(db *gorm.DB) *gorm.DB {
+			return db.Order("set_number ASC").Order("id ASC")
+		}).
+		Find(&sessions).Error
+	return sessions, err
+}
+
+func (r *gormWorkoutSessionRepository) ListByTraining(ctx context.Context, trainingID uint) ([]*models.WorkoutSession, error) {
+	var sessions []*models.WorkoutSession
+	err := r.db.WithContext(ctx).
+		Where("training_id = ?", trainingID).
+		Order("order_index ASC").
+		Order("id ASC").
+		Preload("WorkoutType").
+		Preload("WorkoutType.MuscleGroup").
+		Preload("Sets", func(db *gorm.DB) *gorm.DB {
+			return db.Order("set_number ASC").Order("id ASC")
+		}).
 		Find(&sessions).Error
 	return sessions, err
 }

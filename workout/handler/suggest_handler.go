@@ -64,12 +64,22 @@ func (h *SuggestHandler) suggest(c *gin.Context) {
 	var parts []string
 	for idx, s := range sessions {
 		line := "Session " + strconv.Itoa(idx+1) + ": " + s.WorkoutType.Name
-		if len(s.Details) > 0 {
-			var dParts []string
-			for _, d := range s.Details {
-				dParts = append(dParts, d.DetailName+"="+d.DetailValue)
+		if len(s.Sets) > 0 {
+			var setParts []string
+			for _, set := range s.Sets {
+				var fields []string
+				if set.WeightKg != nil {
+					fields = append(fields, "weight="+strconv.FormatFloat(*set.WeightKg, 'f', -1, 64)+"kg")
+				}
+				if set.Reps != nil {
+					fields = append(fields, "reps="+strconv.Itoa(*set.Reps))
+				}
+				if set.DurationSeconds != nil {
+					fields = append(fields, "duration="+strconv.Itoa(*set.DurationSeconds)+"s")
+				}
+				setParts = append(setParts, "set "+strconv.Itoa(set.SetNumber)+": "+strings.Join(fields, ", "))
 			}
-			line += " (" + strings.Join(dParts, ", ") + ")"
+			line += " (" + strings.Join(setParts, "; ") + ")"
 		}
 		parts = append(parts, line)
 	}

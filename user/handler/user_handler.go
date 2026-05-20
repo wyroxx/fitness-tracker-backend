@@ -61,8 +61,8 @@ type updateUserRequest struct {
 // @Produce      json
 // @Param        payload  body      createUserRequest  true  "User info"
 // @Success      201      {object}  models.User
-// @Failure      400      {object}  gin.H
-// @Failure      500      {object}  gin.H
+// @Failure      400      {object}  errorResponse
+// @Failure      500      {object}  errorResponse
 // @Router       /users [post]
 func (h *UserHandler) create(c *gin.Context) {
 	var req createUserRequest
@@ -98,7 +98,7 @@ func (h *UserHandler) create(c *gin.Context) {
 // @Param        limit   query     int  false  "Limit"
 // @Param        offset  query     int  false  "Offset"
 // @Success      200     {array}   models.User
-// @Failure      500     {object}  gin.H
+// @Failure      500     {object}  errorResponse
 // @Router       /users [get]
 // @Security     BearerAuth
 func (h *UserHandler) list(c *gin.Context) {
@@ -125,8 +125,8 @@ func (h *UserHandler) list(c *gin.Context) {
 // @Produce      json
 // @Param        id   path      int  true  "User ID"
 // @Success      200  {object}  models.User
-// @Failure      400  {object}  gin.H
-// @Failure      404  {object}  gin.H
+// @Failure      400  {object}  errorResponse
+// @Failure      404  {object}  errorResponse
 // @Router       /users/{id} [get]
 // @Security     BearerAuth
 func (h *UserHandler) getByID(c *gin.Context) {
@@ -151,9 +151,9 @@ func (h *UserHandler) getByID(c *gin.Context) {
 // @Param        id       path      int                 true  "User ID"
 // @Param        payload  body      updateUserRequest   true  "Update information"
 // @Success      200      {object}  models.User
-// @Failure      400      {object}  gin.H
-// @Failure      404      {object}  gin.H
-// @Failure      500      {object}  gin.H
+// @Failure      400      {object}  errorResponse
+// @Failure      404      {object}  errorResponse
+// @Failure      500      {object}  errorResponse
 // @Router       /users/{id} [put]
 // @Security     BearerAuth
 func (h *UserHandler) update(c *gin.Context) {
@@ -202,8 +202,8 @@ func (h *UserHandler) update(c *gin.Context) {
 // @Tags         users
 // @Param        id   path      int  true  "User ID"
 // @Success      204  {string}  string  "No Content"
-// @Failure      400  {object}  gin.H
-// @Failure      500  {object}  gin.H
+// @Failure      400  {object}  errorResponse
+// @Failure      500  {object}  errorResponse
 // @Router       /users/{id} [delete]
 // @Security     BearerAuth
 func (h *UserHandler) delete(c *gin.Context) {
@@ -227,8 +227,8 @@ func (h *UserHandler) delete(c *gin.Context) {
 // @Tags         users
 // @Produce      json
 // @Success      200  {object}  models.User
-// @Failure      401  {object}  gin.H
-// @Failure      404  {object}  gin.H
+// @Failure      401  {object}  errorResponse
+// @Failure      404  {object}  errorResponse
 // @Router       /users/me [get]
 // @Security     BearerAuth
 func (h *UserHandler) getMe(c *gin.Context) {

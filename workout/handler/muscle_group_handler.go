@@ -43,8 +43,8 @@ type muscleGroupRequest struct {
 // @Produce      json
 // @Param        payload  body      muscleGroupRequest  true  "Muscle group"
 // @Success      201      {object}  models.MuscleGroup
-// @Failure      400      {object}  gin.H
-// @Failure      500      {object}  gin.H
+// @Failure      400      {object}  errorResponse
+// @Failure      500      {object}  errorResponse
 // @Router       /muscle-groups [post]
 func (h *MuscleGroupHandler) create(c *gin.Context) {
 	var req muscleGroupRequest
@@ -83,8 +83,8 @@ func (h *MuscleGroupHandler) list(c *gin.Context) {
 // @Produce      json
 // @Param        id   path      int  true  "MuscleGroup ID"
 // @Success      200  {object}  models.MuscleGroup
-// @Failure      400  {object}  gin.H
-// @Failure      404  {object}  gin.H
+// @Failure      400  {object}  errorResponse
+// @Failure      404  {object}  errorResponse
 // @Router       /muscle-groups/{id} [get]
 func (h *MuscleGroupHandler) getByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -109,8 +109,8 @@ func (h *MuscleGroupHandler) getByID(c *gin.Context) {
 // @Param        id       path      int                true  "MuscleGroup ID"
 // @Param        payload  body      muscleGroupRequest true  "Update"
 // @Success      200      {object}  models.MuscleGroup
-// @Failure      400      {object}  gin.H
-// @Failure      404      {object}  gin.H
+// @Failure      400      {object}  errorResponse
+// @Failure      404      {object}  errorResponse
 // @Router       /muscle-groups/{id} [put]
 func (h *MuscleGroupHandler) update(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -142,7 +142,7 @@ func (h *MuscleGroupHandler) update(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id   path      int  true  "MuscleGroup ID"
 // @Success      204  {string}  string  "No Content"
-// @Failure      400  {object}  gin.H
+// @Failure      400  {object}  errorResponse
 // @Router       /muscle-groups/{id} [delete]
 func (h *MuscleGroupHandler) delete(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))

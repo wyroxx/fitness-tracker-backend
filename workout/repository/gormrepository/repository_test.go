@@ -2,6 +2,7 @@ package gormrepository
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -14,7 +15,7 @@ import (
 
 // newTestDB creates an in‑memory SQLite DB and migrates all workout models.
 func newTestDB(t *testing.T) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("opening DB: %v", err)
 	}
@@ -22,8 +23,9 @@ func newTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(
 		&models.MuscleGroup{},
 		&models.WorkoutType{},
+		&models.Training{},
 		&models.WorkoutSession{},
-		&models.WorkoutDetail{},
+		&models.WorkoutSet{},
 	); err != nil {
 		t.Fatalf("migrating schema: %v", err)
 	}
@@ -119,16 +121,17 @@ func TestWorkoutTypeCreateAndGet(t *testing.T) {
 }
 
 /*
-Smoke test for WorkoutSession & WorkoutDetail to ensure associations persist.
+Smoke test for WorkoutSession & WorkoutSet to ensure associations persist.
 */
-func TestWorkoutSessionWithDetails(t *testing.T) {
+func TestWorkoutSessionWithSets(t *testing.T) {
 	ctx := context.Background()
 	db := newTestDB(t)
 
 	mgRepo := NewMuscleGroupRepository(db)
 	wtRepo := NewWorkoutTypeRepository(db)
 	wsRepo := NewWorkoutSessionRepository(db)
-	wdRepo := NewWorkoutDetailRepository(db)
+	setRepo := NewWorkoutSetRepository(db)
+	trainingRepo := NewTrainingRepository(db)
 
 	// setup prerequisite records
 	mg := &models.MuscleGroup{Name: "Legs"}
@@ -140,8 +143,18 @@ func TestWorkoutSessionWithDetails(t *testing.T) {
 		t.Fatalf("create wt: %v", err)
 	}
 
+	training := &models.Training{
+		UserID:    42,
+		Title:     "Leg day",
+		StartedAt: time.Now(),
+	}
+	if err := trainingRepo.Create(ctx, training); err != nil {
+		t.Fatalf("create training: %v", err)
+	}
+
 	// CREATE session
 	session := &models.WorkoutSession{
+		TrainingID:    training.ID,
 		WorkoutTypeID: wt.ID,
 		UserID:        42,
 		Datetime:      time.Now(),
@@ -150,22 +163,71 @@ func TestWorkoutSessionWithDetails(t *testing.T) {
 		t.Fatalf("create session: %v", err)
 	}
 
-	// ADD a detail row
-	detail := &models.WorkoutDetail{
+	reps := 12
+	weight := 80.0
+	set := &models.WorkoutSet{
 		WorkoutSessionID: session.ID,
-		DetailName:       "Reps",
-		DetailValue:      "12",
+		SetNumber:        1,
+		WeightKg:         &weight,
+		Reps:             &reps,
 	}
-	if err := wdRepo.Create(ctx, detail); err != nil {
-		t.Fatalf("create detail: %v", err)
+	if err := setRepo.Create(ctx, set); err != nil {
+		t.Fatalf("create set: %v", err)
 	}
 
-	// Round‑trip: fetch session preloaded with details
+	// Round-trip: fetch session preloaded with typed sets.
 	stored, err := wsRepo.GetByID(ctx, session.ID)
 	if err != nil {
 		t.Fatalf("get session: %v", err)
 	}
-	if len(stored.Details) != 1 || stored.Details[0].DetailValue != "12" {
-		t.Fatalf("details not persisted: %+v", stored.Details)
+	if len(stored.Sets) != 1 || *stored.Sets[0].Reps != 12 {
+		t.Fatalf("sets not persisted: %+v", stored.Sets)
+	}
+}
+
+func TestTrainingNestedCreate(t *testing.T) {
+	ctx := context.Background()
+	db := newTestDB(t)
+
+	mgRepo := NewMuscleGroupRepository(db)
+	wtRepo := NewWorkoutTypeRepository(db)
+	trainingRepo := NewTrainingRepository(db)
+
+	mg := &models.MuscleGroup{Name: "Chest"}
+	if err := mgRepo.Create(ctx, mg); err != nil {
+		t.Fatalf("create mg: %v", err)
+	}
+	wt := &models.WorkoutType{Name: "Bench press", MuscleGroupID: mg.ID}
+	if err := wtRepo.Create(ctx, wt); err != nil {
+		t.Fatalf("create wt: %v", err)
+	}
+
+	reps := 10
+	weight := 50.0
+	training := &models.Training{
+		UserID:    7,
+		Title:     "Chest & Triceps",
+		StartedAt: time.Now(),
+		Sessions: []models.WorkoutSession{
+			{
+				UserID:        7,
+				WorkoutTypeID: wt.ID,
+				Datetime:      time.Now(),
+				Sets: []models.WorkoutSet{
+					{SetNumber: 1, WeightKg: &weight, Reps: &reps},
+				},
+			},
+		},
+	}
+	if err := trainingRepo.Create(ctx, training); err != nil {
+		t.Fatalf("create training: %v", err)
+	}
+
+	stored, err := trainingRepo.GetByID(ctx, training.ID)
+	if err != nil {
+		t.Fatalf("get training: %v", err)
+	}
+	if len(stored.Sessions) != 1 || len(stored.Sessions[0].Sets) != 1 {
+		t.Fatalf("nested associations not persisted: %+v", stored)
 	}
 }

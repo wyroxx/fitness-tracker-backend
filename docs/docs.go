@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.loginRequest"
+                            "$ref": "#/definitions/handler.loginRequest"
                         }
                     }
                 ],
@@ -43,19 +43,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.tokenResponse"
+                            "$ref": "#/definitions/handler.tokenResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     }
                 }
@@ -102,7 +102,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.refreshRequest"
+                            "$ref": "#/definitions/handler.refreshRequest"
                         }
                     }
                 ],
@@ -110,19 +110,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.tokenResponse"
+                            "$ref": "#/definitions/handler.tokenResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     }
                 }
@@ -148,7 +148,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.MuscleGroup"
+                                "$ref": "#/definitions/models.MuscleGroup"
                             }
                         }
                     }
@@ -177,7 +177,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.muscleGroupRequest"
+                            "$ref": "#/definitions/handler.muscleGroupRequest"
                         }
                     }
                 ],
@@ -185,19 +185,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.MuscleGroup"
+                            "$ref": "#/definitions/models.MuscleGroup"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
@@ -230,19 +230,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.MuscleGroup"
+                            "$ref": "#/definitions/models.MuscleGroup"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
@@ -277,7 +277,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.muscleGroupRequest"
+                            "$ref": "#/definitions/handler.muscleGroupRequest"
                         }
                     }
                 ],
@@ -285,19 +285,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.MuscleGroup"
+                            "$ref": "#/definitions/models.MuscleGroup"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
@@ -331,7 +331,103 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/muscle-groups/{id}/workout-types": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workout-types"
+                ],
+                "summary": "List workout types by muscle group",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "MuscleGroup ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.WorkoutType"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/profile/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Get current user's workout stats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.profileStatsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
@@ -355,7 +451,269 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.suggestionResponse"
+                            "$ref": "#/definitions/handler.suggestionResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/trainings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trainings"
+                ],
+                "summary": "List trainings for current user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "RFC3339 started_at cursor",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.trainingListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trainings"
+                ],
+                "summary": "Create training with nested sessions and sets",
+                "parameters": [
+                    {
+                        "description": "Training",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.trainingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Training"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/trainings/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trainings"
+                ],
+                "summary": "Get training by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Training ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Training"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "trainings"
+                ],
+                "summary": "Delete training",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Training ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trainings"
+                ],
+                "summary": "Update training metadata",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Training ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.trainingUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Training"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "500": {
@@ -401,14 +759,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_user_models.User"
+                                "$ref": "#/definitions/models.User"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     }
                 }
@@ -432,7 +790,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.createUserRequest"
+                            "$ref": "#/definitions/handler.createUserRequest"
                         }
                     }
                 ],
@@ -440,19 +798,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_user_models.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     }
                 }
@@ -477,19 +835,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_user_models.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     }
                 }
@@ -522,19 +880,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_user_models.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     }
                 }
@@ -569,7 +927,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.updateUserRequest"
+                            "$ref": "#/definitions/handler.updateUserRequest"
                         }
                     }
                 ],
@@ -577,25 +935,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_user_models.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     }
                 }
@@ -629,13 +987,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_user_handler.errorResponse"
                         }
                     }
                 }
@@ -667,6 +1025,12 @@ const docTemplate = `{
                         "description": "Offset",
                         "name": "offset",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Training ID",
+                        "name": "training_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -675,7 +1039,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutSession"
+                                "$ref": "#/definitions/models.WorkoutSession"
                             }
                         }
                     }
@@ -704,7 +1068,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.workoutSessionRequest"
+                            "$ref": "#/definitions/handler.workoutSessionRequest"
                         }
                     }
                 ],
@@ -712,19 +1076,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutSession"
+                            "$ref": "#/definitions/models.WorkoutSession"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
@@ -757,19 +1121,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutSession"
+                            "$ref": "#/definitions/models.WorkoutSession"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
@@ -803,14 +1167,66 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
             }
         },
-        "/workout-sessions/{id}/details": {
-            "post": {
+        "/workout-sessions/{id}/sets": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workout-sessions"
+                ],
+                "summary": "List sets for a workout session",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "WorkoutSession ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.WorkoutSet"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -825,7 +1241,7 @@ const docTemplate = `{
                 "tags": [
                     "workout-sessions"
                 ],
-                "summary": "Add detail to workout session",
+                "summary": "Replace all sets for a workout session",
                 "parameters": [
                     {
                         "type": "integer",
@@ -835,38 +1251,38 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Detail",
+                        "description": "Sets",
                         "name": "payload",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.workoutDetailRequest"
+                            "$ref": "#/definitions/handler.replaceWorkoutSetsRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutDetail"
+                            "$ref": "#/definitions/models.WorkoutSession"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
@@ -886,13 +1302,39 @@ const docTemplate = `{
                     "workout-types"
                 ],
                 "summary": "List workout types",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "MuscleGroup ID",
+                        "name": "muscle_group_id",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutType"
+                                "$ref": "#/definitions/models.WorkoutType"
                             }
                         }
                     }
@@ -921,7 +1363,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.workoutTypeRequest"
+                            "$ref": "#/definitions/handler.workoutTypeRequest"
                         }
                     }
                 ],
@@ -929,19 +1371,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutType"
+                            "$ref": "#/definitions/models.WorkoutType"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
@@ -974,19 +1416,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutType"
+                            "$ref": "#/definitions/models.WorkoutType"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
@@ -1021,7 +1463,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.workoutTypeRequest"
+                            "$ref": "#/definitions/handler.workoutTypeRequest"
                         }
                     }
                 ],
@@ -1029,19 +1471,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutType"
+                            "$ref": "#/definitions/models.WorkoutType"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
@@ -1075,7 +1517,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     }
                 }
@@ -1083,72 +1525,10 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "fitness-tracker-backend_user_handler.createUserRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "name",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "fitness-tracker-backend_user_handler.loginRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "fitness-tracker-backend_user_handler.refreshRequest": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "fitness-tracker-backend_user_handler.tokenResponse": {
+        "fitness-tracker-backend_user_handler.errorResponse": {
             "type": "object",
             "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "fitness-tracker-backend_user_handler.updateUserRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
+                "error": {
                     "type": "string"
                 }
             }
@@ -1161,7 +1541,41 @@ const docTemplate = `{
                 }
             }
         },
-        "fitness-tracker-backend_workout_handler.muscleGroupRequest": {
+        "handler.createUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.loginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.muscleGroupRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -1172,7 +1586,49 @@ const docTemplate = `{
                 }
             }
         },
-        "fitness-tracker-backend_workout_handler.suggestionResponse": {
+        "handler.profileStatsResponse": {
+            "type": "object",
+            "properties": {
+                "ai_insight": {
+                    "type": "string"
+                },
+                "last_training_at": {
+                    "type": "string"
+                },
+                "total_exercise_sessions": {
+                    "type": "integer"
+                },
+                "total_workouts": {
+                    "type": "integer"
+                },
+                "trainings_this_week": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.refreshRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.replaceWorkoutSetsRequest": {
+            "type": "object",
+            "properties": {
+                "sets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.workoutSetRequest"
+                    }
+                }
+            }
+        },
+        "handler.suggestionResponse": {
             "type": "object",
             "properties": {
                 "suggestion": {
@@ -1180,22 +1636,55 @@ const docTemplate = `{
                 }
             }
         },
-        "fitness-tracker-backend_workout_handler.workoutDetailRequest": {
+        "handler.tokenResponse": {
             "type": "object",
-            "required": [
-                "name",
-                "value"
-            ],
             "properties": {
-                "name": {
+                "access_token": {
                     "type": "string"
                 },
-                "value": {
+                "refresh_token": {
                     "type": "string"
                 }
             }
         },
-        "fitness-tracker-backend_workout_handler.workoutSessionRequest": {
+        "handler.trainingListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Training"
+                    }
+                },
+                "next_cursor": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.trainingRequest": {
+            "type": "object",
+            "properties": {
+                "finished_at": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "sessions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.trainingSessionRequest"
+                    }
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.trainingSessionRequest": {
             "type": "object",
             "required": [
                 "workout_type_id"
@@ -1204,18 +1693,117 @@ const docTemplate = `{
                 "datetime": {
                     "type": "string"
                 },
+                "order_index": {
+                    "type": "integer"
+                },
+                "sets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.workoutSetRequest"
+                    }
+                },
                 "workout_type_id": {
                     "type": "integer"
                 }
             }
         },
-        "fitness-tracker-backend_workout_handler.workoutTypeRequest": {
+        "handler.trainingUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "finished_at": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.updateUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.workoutSessionRequest": {
+            "type": "object",
+            "required": [
+                "training_id",
+                "workout_type_id"
+            ],
+            "properties": {
+                "datetime": {
+                    "type": "string"
+                },
+                "order_index": {
+                    "type": "integer"
+                },
+                "sets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.workoutSetRequest"
+                    }
+                },
+                "training_id": {
+                    "type": "integer"
+                },
+                "workout_type_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.workoutSetRequest": {
+            "type": "object",
+            "properties": {
+                "distance_meters": {
+                    "type": "number"
+                },
+                "duration_seconds": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "reps": {
+                    "type": "integer"
+                },
+                "set_number": {
+                    "type": "integer"
+                },
+                "weight_kg": {
+                    "type": "number"
+                }
+            }
+        },
+        "handler.workoutTypeRequest": {
             "type": "object",
             "required": [
                 "muscle_group_id",
                 "name"
             ],
             "properties": {
+                "default_metric": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
                 "muscle_group_id": {
                     "type": "integer"
                 },
@@ -1224,11 +1812,53 @@ const docTemplate = `{
                 }
             }
         },
-        "gin.H": {
+        "models.MuscleGroup": {
             "type": "object",
-            "additionalProperties": {}
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
         },
-        "github_com_VibeTeam_fitness-tracker-backend_user_models.User": {
+        "models.Training": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "finished_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "sessions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.WorkoutSession"
+                    }
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.User": {
             "type": "object",
             "properties": {
                 "createdAt": {
@@ -1248,80 +1878,99 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_VibeTeam_fitness-tracker-backend_workout_models.MuscleGroup": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutDetail": {
-            "type": "object",
-            "properties": {
-                "detailName": {
-                    "type": "string"
-                },
-                "detailValue": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "workoutSessionID": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutSession": {
+        "models.WorkoutSession": {
             "type": "object",
             "properties": {
                 "datetime": {
                     "type": "string"
                 },
-                "details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutDetail"
-                    }
-                },
                 "id": {
                     "type": "integer"
                 },
-                "userID": {
+                "order_index": {
                     "type": "integer"
                 },
-                "workoutType": {
+                "sets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.WorkoutSet"
+                    }
+                },
+                "training": {
                     "description": "Associations",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutType"
+                            "$ref": "#/definitions/models.Training"
                         }
                     ]
                 },
-                "workoutTypeID": {
+                "training_id": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "workout_type": {
+                    "$ref": "#/definitions/models.WorkoutType"
+                },
+                "workout_type_id": {
                     "type": "integer"
                 }
             }
         },
-        "github_com_VibeTeam_fitness-tracker-backend_workout_models.WorkoutType": {
+        "models.WorkoutSet": {
             "type": "object",
             "properties": {
+                "distance_meters": {
+                    "type": "number"
+                },
+                "duration_seconds": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "integer"
                 },
-                "muscleGroup": {
+                "notes": {
+                    "type": "string"
+                },
+                "reps": {
+                    "type": "integer"
+                },
+                "set_number": {
+                    "type": "integer"
+                },
+                "weight_kg": {
+                    "type": "number"
+                },
+                "workout_session_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.WorkoutType": {
+            "type": "object",
+            "properties": {
+                "default_metric": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "muscle_group": {
                     "description": "Associations",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/github_com_VibeTeam_fitness-tracker-backend_workout_models.MuscleGroup"
+                            "$ref": "#/definitions/models.MuscleGroup"
                         }
                     ]
                 },
-                "muscleGroupID": {
+                "muscle_group_id": {
                     "type": "integer"
                 },
                 "name": {
