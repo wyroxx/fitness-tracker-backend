@@ -4,7 +4,7 @@
 docker compose up
 ```
 ### Locally
-- Set up Ollama and PostreSQL locally or run from docker compose
+- Set up PostgreSQL locally or run it from docker compose, and set `GROQ_API_KEY` for workout suggestions
 - Run main.go
 
 ## API Documentation

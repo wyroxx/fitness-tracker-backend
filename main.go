@@ -96,19 +96,18 @@ func main() {
 	trainingHandler := workouthandler.NewTrainingHandler(trainingRepo)
 	wsHandler := workouthandler.NewWorkoutSessionHandler(workoutSessionRepo, trainingRepo, workoutSetRepo)
 	profileStatsHandler := workouthandler.NewProfileStatsHandler(trainingRepo, workoutSessionRepo)
-	ollamaURL := os.Getenv("OLLAMA_BASE_URL")
-	if ollamaURL == "" {
-		ollamaURL = "http://localhost:11434"
-	}
-	modelName := "gemma3:1b-it-qat"
-	// pull model on startup (best-effort)
-	// NOTE: that line can take significant amount of time to complete on first start or on change of modelName variable
-	// because Ollama need to download model (default model weight 1 Gb)
-	if err := suggester.EnsureModel(ollamaURL, modelName); err != nil {
-		log.Printf("warning: failed to pull model %s: %v", modelName, err)
-	}
 
-	suggestHandler := workouthandler.NewSuggestHandler(trainingRepo, suggester.New(ollamaURL, modelName))
+	llmBaseURL := os.Getenv("GROQ_BASE_URL")
+	if llmBaseURL == "" {
+		llmBaseURL = "https://api.groq.com/openai/v1"
+	}
+	modelName := os.Getenv("GROQ_MODEL")
+	if modelName == "" {
+		modelName = "llama-3.1-8b-instant"
+	}
+	llmAPIKey := os.Getenv("GROQ_API_KEY")
+
+	suggestHandler := workouthandler.NewSuggestHandler(trainingRepo, suggester.New(llmBaseURL, modelName, llmAPIKey))
 
 	router := gin.Default()
 
