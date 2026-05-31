@@ -83,7 +83,7 @@ func (h *SuggestHandler) suggest(c *gin.Context) {
 		parts = append(parts, line)
 	}
 	history := strings.Join(parts, "\n")
-	suggestion, err := h.suggester.Suggest(history)
+	suggestion, err := h.suggester.Suggest(c.Request.Context(), history)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

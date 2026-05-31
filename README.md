@@ -11,6 +11,9 @@ docker compose up
 - Swagger available in `./docs/`
 - Or by `/swagger/index.html` endpoint
 
+## Deployment
+- See `DEPLOYMENT.md` for the Neon + Render + Groq deployment flow.
+
 ## Flutter-facing workout flow
 - `GET /muscle-groups` - muscle group grid.
 - `GET /muscle-groups/{id}/workout-types` or `GET /workout-types?muscle_group_id={id}&query=bench` - exercise catalog.

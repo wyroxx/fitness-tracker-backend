@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: fitness-tracker-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: ACCESS_SECRET
+        generateValue: true
+      - key: REFRESH_SECRET
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: GROQ_MODEL
+        value: llama-3.1-8b-instant
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false

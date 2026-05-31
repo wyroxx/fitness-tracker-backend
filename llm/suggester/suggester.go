@@ -2,11 +2,13 @@ package suggester
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const maxSuggestionChars = 250
@@ -45,12 +47,12 @@ func New(baseURL, model, apiKey string) *Suggester {
 		baseURL:   strings.TrimRight(baseURL, "/"),
 		modelName: model,
 		apiKey:    apiKey,
-		httpCli:   &http.Client{},
+		httpCli:   &http.Client{Timeout: 15 * time.Second},
 	}
 }
 
 // Suggest takes the user workout history description and returns a suggestion text.
-func (s *Suggester) Suggest(history string) (string, error) {
+func (s *Suggester) Suggest(ctx context.Context, history string) (string, error) {
 	if s.apiKey == "" {
 		return "", fmt.Errorf("LLM API key is not configured")
 	}
@@ -65,7 +67,7 @@ func (s *Suggester) Suggest(history string) (string, error) {
 		Stream:    false,
 	}
 	b, _ := json.Marshal(reqBody)
-	req, err := http.NewRequest("POST", s.baseURL+"/chat/completions", bytes.NewReader(b))
+	req, err := http.NewRequestWithContext(ctx, "POST", s.baseURL+"/chat/completions", bytes.NewReader(b))
 	if err != nil {
 		return "", err
 	}

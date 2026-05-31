@@ -13,6 +13,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -113,11 +114,18 @@ func main() {
 
 	// Configure CORS middleware
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowAllOrigins = true
+	corsOrigins := splitEnvList("CORS_ALLOWED_ORIGINS")
+	if len(corsOrigins) == 0 {
+		corsConfig.AllowAllOrigins = true
+	} else {
+		corsConfig.AllowOrigins = corsOrigins
+	}
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
-	corsConfig.AllowCredentials = true
 	router.Use(cors.New(corsConfig))
+	router.GET("/healthz", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 
 	// register routes
 	userHandler.RegisterRoutes(router, authMiddleware)
@@ -142,4 +150,20 @@ func main() {
 	if err := router.Run(listenAddr); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
+}
+
+func splitEnvList(key string) []string {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return nil
+	}
+
+	var values []string
+	for _, value := range strings.Split(raw, ",") {
+		value = strings.TrimSpace(value)
+		if value != "" {
+			values = append(values, value)
+		}
+	}
+	return values
 }

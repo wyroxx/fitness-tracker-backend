@@ -24,11 +24,14 @@ services:
       # Web server port inside container
       PORT: 8080
       # Database connection string (internal host names)
-      DATABASE_URL: postgres://postgres:postgres@db:5432/fitness_tracker?sslmode=disable
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgres://postgres:postgres@db:5432/fitness_tracker?sslmode=disable}
+      ACCESS_SECRET: ${ACCESS_SECRET:-access-secret}
+      REFRESH_SECRET: ${REFRESH_SECRET:-refresh-secret}
       # Groq LLM configuration. Export GROQ_API_KEY before running docker compose.
-      GROQ_API_KEY: ${GROQ_API_KEY}
-      GROQ_BASE_URL: https://api.groq.com/openai/v1
-      GROQ_MODEL: llama-3.1-8b-instant
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_BASE_URL: ${GROQ_BASE_URL:-https://api.groq.com/openai/v1}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.1-8b-instant}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
     ports:
       - "8080:8080"
 

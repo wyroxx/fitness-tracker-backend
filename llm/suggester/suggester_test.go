@@ -1,6 +1,7 @@
 package suggester
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -29,7 +30,7 @@ func TestSuggestCallsOpenAICompatibleChatCompletions(t *testing.T) {
 		}, nil
 	})}
 
-	got, err := sg.Suggest("Training 1: Chest day - bench press")
+	got, err := sg.Suggest(context.Background(), "Training 1: Chest day - bench press")
 	if err != nil {
 		t.Fatalf("Suggest() error = %v", err)
 	}
@@ -51,7 +52,7 @@ func TestSuggestCallsOpenAICompatibleChatCompletions(t *testing.T) {
 func TestSuggestRequiresAPIKey(t *testing.T) {
 	sg := New("https://api.groq.com/openai/v1", "llama-3.1-8b-instant", "")
 
-	if _, err := sg.Suggest("history"); err == nil {
+	if _, err := sg.Suggest(context.Background(), "history"); err == nil {
 		t.Fatal("Suggest() error = nil, want API key error")
 	}
 }
