@@ -3,6 +3,7 @@ services:
     name: fitness-tracker-backend
     runtime: docker
     plan: free
+    region: frankfurt
     dockerfilePath: ./Dockerfile
     healthCheckPath: /healthz
     envVars:
