@@ -11,7 +11,36 @@ import (
 	"time"
 )
 
-const maxSuggestionChars = 250
+const (
+	maxSuggestionChars = 250
+
+	suggestionPromptTemplate = `You are a fitness coach in a mobile workout app.
+
+Based on the user's recent workout history, suggest the next workout in a practical coach-like style.
+
+Decision rules:
+- Choose a focus that fits recovery, balance, and recent training gaps.
+- Do not repeat the exact same focus as the latest workout unless it makes sense as a light session.
+- Prioritize undertrained muscles or useful balance work.
+- Prefer exercises the user already performs, but add one helpful accessory if needed.
+- Do not give exact weights, reps, or set numbers.
+- Use qualitative guidance like "keep it controlled", "push slightly harder", "make it lighter", "focus on form", or "add rear delt work".
+- Mention 2-4 exercises.
+- Keep it realistic for one workout.
+
+Workout history:
+%s
+
+Return exactly one plain-text sentence in English, max 250 characters.
+No markdown, bullets, greetings, explanations, emojis, or disclaimers.
+Use only these exercises:
+Chest: Bench Press, Incline Bench Press, Dumbbell Bench Press, Incline Dumbbell Press, Hammer Chest Press, Push Up, Dips, Pec Deck Fly, Cable Chest Fly.
+Back: Pull Up, Lat Pulldown, Seated Cable Row, Barbell Row, One Arm Dumbbell Row, Chest Supported Row, Back Extension.
+Legs: Squat, Leg Press, Romanian Deadlift, Deadlift, Bulgarian Squat, Leg Extension, Leg Curl, Standing Calf Raise, Seated Calf Raise, Hip Abduction, Hip Thrust.
+Abs: Crunch, Leg Raise, Hanging Leg Raise, Cable Crunch, Ab Machine Crunch, Russian Twist, Plank.
+Shoulders: Dumbbell Shoulder Press, Machine Shoulder Press, Lateral Raise, Reverse Pec Deck, Face Pull, Front Raise.
+Arms: Barbell Curl, Dumbbell Curl, Hammer Curl, Incline Dumbbell Curl, Preacher Curl, Overhead Triceps Extension, Skull Crusher, Triceps Pushdown, Rope Triceps Pushdown, Diamond Push Ups.`
+)
 
 // ChatRequest is the payload sent to an OpenAI-compatible chat completions API.
 type ChatRequest struct {
@@ -60,8 +89,7 @@ func (s *Suggester) Suggest(ctx context.Context, history string) (string, error)
 	reqBody := ChatRequest{
 		Model: s.modelName,
 		Messages: []ChatMessage{
-			{Role: "user", Content: fmt.Sprintf("You are a fitness coach in a mobile app. Based on this workout history, suggest the next workout: %s."+
-				"\nReturn one plain-text sentence in English, max 250 characters. Include the workout focus and 2-4 concrete exercises or set targets. No markdown, bullets, greetings, or explanations.", history)},
+			{Role: "user", Content: fmt.Sprintf(suggestionPromptTemplate, history)},
 		},
 		MaxTokens: 100,
 		Stream:    false,
