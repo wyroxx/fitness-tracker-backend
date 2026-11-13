@@ -80,3 +80,11 @@ func (r *gormTrainingRepository) withGraph(ctx context.Context) *gorm.DB {
 			return db.Order("set_number ASC").Order("id ASC")
 		})
 }
+
+// ListByUserBetween uses a half-open interval [from, to).
+func (r *gormTrainingRepository) ListByUserBetween(ctx context.Context, userID uint, from, to time.Time) ([]*models.Training, error) {
+	var trainings []*models.Training
+	err := r.withGraph(ctx).Where("user_id = ? AND started_at >= ? AND started_at < ?", userID, from, to).
+		Order("started_at ASC").Order("id ASC").Find(&trainings).Error
+	return trainings, err
+}

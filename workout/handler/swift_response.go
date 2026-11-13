@@ -6,9 +6,9 @@ import (
 	"github.com/VibeTeam/fitness-tracker-backend/workout/models"
 )
 
-// These DTOs mirror the Swift domain models. Persistence IDs and associations
-// remain in the database models rather than leaking into the app's payloads.
+// These DTOs match both mobile clients. Training ID supports Flutter deletion.
 type workoutResponse struct {
+	ID        uint                      `json:"id"`
 	Title     string                    `json:"title"`
 	StartedAt string                    `json:"started_at"`
 	Exercises []workoutExerciseResponse `json:"exercises"`
@@ -34,6 +34,7 @@ type exerciseResponse struct {
 
 func workoutFromTraining(training *models.Training) workoutResponse {
 	result := workoutResponse{
+		ID:        training.ID,
 		Title:     training.Title,
 		StartedAt: training.StartedAt.Format(time.RFC3339Nano),
 		Exercises: make([]workoutExerciseResponse, len(training.Sessions)),

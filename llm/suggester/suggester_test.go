@@ -21,6 +21,9 @@ func TestSuggestCallsOpenAICompatibleChatCompletions(t *testing.T) {
 			t.Fatalf("decode request: %v", err)
 		}
 		gotModel = req.Model
+		if req.MaxTokens < 2048 {
+			t.Fatal("reasoning models need room to produce the final answer")
+		}
 
 		body := `{"choices":[{"message":{"role":"assistant","content":"Push focus: bench press 3x8, incline dumbbell press 3x10, triceps dips 3x12."}}]}`
 		return &http.Response{
@@ -91,5 +94,30 @@ func TestCompactSuggestionCountsRunes(t *testing.T) {
 	}
 	if !strings.HasSuffix(got, "...") {
 		t.Fatalf("compactSuggestion() = %q, want truncation suffix", got)
+	}
+}
+
+func TestCoachIndependentRequest(t *testing.T) {
+	sg := New("https://example.invalid", "test", "key")
+	sg.httpCli = &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		var request ChatRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			t.Fatal(err)
+		}
+		if len(request.Messages) != 3 || request.Messages[0].Role != "system" || request.MaxTokens != 500 {
+			t.Errorf("unexpected coach request: %+v", request)
+		}
+		if request.Messages[2].Content == "" {
+			t.Error("missing default question")
+		}
+		body, _ := json.Marshal(map[string]any{"choices": []any{map[string]any{"message": map[string]string{"content": strings.Repeat("Progress. ", 40)}}}})
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(string(body)))}, nil
+	})}
+	result, err := sg.Coach(context.Background(), `{"workouts":2}`, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result) <= 250 {
+		t.Fatal("coach answer was truncated to legacy suggestion limit")
 	}
 }

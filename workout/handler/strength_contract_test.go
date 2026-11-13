@@ -39,6 +39,10 @@ func TestStrengthTrainingContract(t *testing.T) {
 	exercises := fmt.Sprintf(`[{"id":%d,"name":"Bench press","sets":[{"set_number":1,"weight":52,"reps":10},{"set_number":2,"weight":0,"reps":8},{"set_number":3,"reps":12},{"set_number":4}]},{"id":%d,"name":"Bench press","sets":[]}]`, exercise.ID, exercise.ID)
 	expected := fmt.Sprintf(`{"title":"Chest day","started_at":"2026-10-25T12:00:00Z","exercises":%s}`, exercises)
 	created := request(http.MethodPost, "/trainings", swiftTrainingPayload(exercises), http.StatusCreated)
+	var createdBody map[string]any
+	require.NoError(t, json.Unmarshal(created, &createdBody))
+	require.Greater(t, createdBody["id"].(float64), float64(0))
+	expected = strings.Replace(expected, `{`, fmt.Sprintf(`{"id":%d,`, uint(createdBody["id"].(float64))), 1)
 	require.JSONEq(t, expected, string(created))
 	require.JSONEq(t, "["+expected+"]", string(request(http.MethodGet, "/trainings", "", http.StatusOK)))
 	var training models.Training
@@ -56,10 +60,14 @@ func TestStrengthTrainingContract(t *testing.T) {
 	require.NoError(t, json.Unmarshal(request(http.MethodGet, "/trainings", "", http.StatusOK), &all))
 	require.Len(t, all, 26)
 	for _, item := range all {
-		require.Len(t, item, 3)
+		require.Len(t, item, 4)
 		require.NotEqual(t, "Private", item["title"])
 		require.NotNil(t, item["exercises"])
 	}
+	request(http.MethodDelete, fmt.Sprintf("/trainings/%d", training.ID), "", http.StatusNoContent)
+	var remaining int64
+	require.NoError(t, db.Model(&models.Training{}).Where("id = ?", training.ID).Count(&remaining).Error)
+	require.Zero(t, remaining)
 }
 
 func TestRejectInvalidSwiftPayloads(t *testing.T) {

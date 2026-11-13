@@ -9,6 +9,17 @@ definitions:
       error:
         type: string
     type: object
+  handler.coachRequest:
+    properties:
+      question:
+        maxLength: 2000
+        type: string
+    type: object
+  handler.coachResponse:
+    properties:
+      answer:
+        type: string
+    type: object
   handler.createUserRequest:
     properties:
       email:
@@ -41,6 +52,34 @@ definitions:
     - email
     - password
     type: object
+  handler.muscleBalance:
+    properties:
+      muscle_group_id:
+        type: integer
+      name:
+        type: string
+      sets:
+        type: integer
+      share_percent:
+        type: number
+    type: object
+  handler.overviewResponse:
+    properties:
+      from:
+        type: string
+      muscle_balance:
+        items:
+          $ref: '#/definitions/handler.muscleBalance'
+        type: array
+      sets:
+        type: integer
+      to:
+        type: string
+      volume_kg:
+        type: number
+      workouts:
+        type: integer
+    type: object
   handler.profileStatsResponse:
     properties:
       ai_insight:
@@ -52,6 +91,41 @@ definitions:
       total_workouts:
         type: integer
       trainings_this_week:
+        type: integer
+    type: object
+  handler.progressExercise:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  handler.progressPoint:
+    properties:
+      date:
+        type: string
+      estimated_1rm_kg:
+        type: number
+      training_id:
+        type: integer
+    type: object
+  handler.progressResponse:
+    properties:
+      change_percent:
+        type: number
+      exercises:
+        items:
+          $ref: '#/definitions/handler.progressExercise'
+        type: array
+      from:
+        type: string
+      points:
+        items:
+          $ref: '#/definitions/handler.progressPoint'
+        type: array
+      to:
+        type: string
+      workout_type_id:
         type: integer
     type: object
   handler.refreshRequest:
@@ -135,6 +209,8 @@ definitions:
         items:
           $ref: '#/definitions/handler.workoutExerciseResponse'
         type: array
+      id:
+        type: integer
       started_at:
         type: string
       title:
@@ -319,6 +395,81 @@ paths:
       summary: List workout types by muscle group
       tags:
       - workout-types
+  /profile/coach/messages:
+    post:
+      consumes:
+      - application/json
+      description: Each request is independent. Send {} for an overview or a question
+        up to 2000 characters. Context contains only the authenticated user's seven-day
+        summary. No messages are stored.
+      parameters:
+      - description: Optional question
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handler.coachRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.coachResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
+        "413":
+          description: Request Entity Too Large
+          schema:
+            $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Ask the AI coach without a conversation
+      tags:
+      - profile
+  /profile/overview:
+    get:
+      description: UTC rolling interval [from,to). Sets require positive reps; volume
+        is sum(weight*reps) in kg. Muscle balance is each primary group's share of
+        counted sets, not a target score.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.overviewResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Profile overview for the last seven days
+      tags:
+      - profile
   /profile/stats:
     get:
       produces:
@@ -339,6 +490,50 @@ paths:
       security:
       - BearerAuth: []
       summary: Get current user's workout stats
+      tags:
+      - profile
+  /profile/strength-progress:
+    get:
+      description: Dates are UTC YYYY-MM-DD, inclusive calendar dates; default last
+        90 days, maximum 366 days. Epley for 2-10 reps; 1 rep uses actual weight.
+        Best set per training. Change compares first and last points; null with fewer
+        than two points. Exercises lists those with eligible sets in this period.
+        Without an ID, selects the lowest available ID.
+      parameters:
+      - description: Exercise ID
+        in: query
+        name: workout_type_id
+        type: integer
+      - description: First date (YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: Last date (YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.progressResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Estimated strength progress
       tags:
       - profile
   /suggest-workout:

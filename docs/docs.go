@@ -215,6 +215,118 @@ const docTemplate = `{
                 }
             }
         },
+        "/profile/coach/messages": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Each request is independent. Send {} for an overview or a question up to 2000 characters. Context contains only the authenticated user's seven-day summary. No messages are stored.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Ask the AI coach without a conversation",
+                "parameters": [
+                    {
+                        "description": "Optional question",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.coachRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.coachResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/profile/overview": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "UTC rolling interval [from,to). Sets require positive reps; volume is sum(weight*reps) in kg. Muscle balance is each primary group's share of counted sets, not a target score.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Profile overview for the last seven days",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.overviewResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/profile/stats": {
             "get": {
                 "security": [
@@ -234,6 +346,69 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/handler.profileStatsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/profile/strength-progress": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Dates are UTC YYYY-MM-DD, inclusive calendar dates; default last 90 days, maximum 366 days. Epley for 2-10 reps; 1 rep uses actual weight. Best set per training. Change compares first and last points; null with fewer than two points. Exercises lists those with eligible sets in this period. Without an ID, selects the lowest available ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Estimated strength progress",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Exercise ID",
+                        "name": "workout_type_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "First date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Last date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.progressResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fitness-tracker-backend_workout_handler.errorResponse"
                         }
                     },
                     "401": {
@@ -531,6 +706,23 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.coachRequest": {
+            "type": "object",
+            "properties": {
+                "question": {
+                    "type": "string",
+                    "maxLength": 2000
+                }
+            }
+        },
+        "handler.coachResponse": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.createUserRequest": {
             "type": "object",
             "required": [
@@ -579,6 +771,49 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.muscleBalance": {
+            "type": "object",
+            "properties": {
+                "muscle_group_id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sets": {
+                    "type": "integer"
+                },
+                "share_percent": {
+                    "type": "number"
+                }
+            }
+        },
+        "handler.overviewResponse": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "muscle_balance": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.muscleBalance"
+                    }
+                },
+                "sets": {
+                    "type": "integer"
+                },
+                "to": {
+                    "type": "string"
+                },
+                "volume_kg": {
+                    "type": "number"
+                },
+                "workouts": {
+                    "type": "integer"
+                }
+            }
+        },
         "handler.profileStatsResponse": {
             "type": "object",
             "properties": {
@@ -595,6 +830,60 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "trainings_this_week": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.progressExercise": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.progressPoint": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "estimated_1rm_kg": {
+                    "type": "number"
+                },
+                "training_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.progressResponse": {
+            "type": "object",
+            "properties": {
+                "change_percent": {
+                    "type": "number"
+                },
+                "exercises": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.progressExercise"
+                    }
+                },
+                "from": {
+                    "type": "string"
+                },
+                "points": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.progressPoint"
+                    }
+                },
+                "to": {
+                    "type": "string"
+                },
+                "workout_type_id": {
                     "type": "integer"
                 }
             }
@@ -720,6 +1009,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/handler.workoutExerciseResponse"
                     }
+                },
+                "id": {
+                    "type": "integer"
                 },
                 "started_at": {
                     "type": "string"
