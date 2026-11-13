@@ -29,7 +29,7 @@ func (h *WorkoutTypeHandler) RegisterRoutes(r *gin.Engine, auth gin.HandlerFunc)
 // @Param        id      path      int  true   "MuscleGroup ID"
 // @Param        limit   query     int  false  "Limit"
 // @Param        offset  query     int  false  "Offset"
-// @Success      200     {array}  models.WorkoutType
+// @Success      200     {array}  exerciseResponse
 // @Failure      400     {object}  errorResponse
 // @Failure      500     {object}  errorResponse
 // @Router       /muscle-groups/{id}/workout-types [get]
@@ -46,12 +46,5 @@ func (h *WorkoutTypeHandler) listByMuscleGroup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, types)
-}
-
-func defaultMetric(value string) string {
-	if value == "" {
-		return "reps"
-	}
-	return value
+	c.JSON(http.StatusOK, exercisesFromModels(types))
 }

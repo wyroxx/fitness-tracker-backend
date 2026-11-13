@@ -95,17 +95,11 @@ func setSummary(sets []models.WorkoutSet) string {
 	var setParts []string
 	for _, set := range sets {
 		var fields []string
-		if set.WeightKg != nil {
-			fields = append(fields, "weight="+strconv.FormatFloat(*set.WeightKg, 'f', -1, 64)+"kg")
+		if set.Weight != nil {
+			fields = append(fields, "weight="+strconv.Itoa(*set.Weight)+"kg")
 		}
 		if set.Reps != nil {
 			fields = append(fields, "reps="+strconv.Itoa(*set.Reps))
-		}
-		if set.DurationSeconds != nil {
-			fields = append(fields, "duration="+strconv.Itoa(*set.DurationSeconds)+"s")
-		}
-		if set.DistanceMeters != nil {
-			fields = append(fields, "distance="+strconv.FormatFloat(*set.DistanceMeters, 'f', -1, 64)+"m")
 		}
 		if len(fields) == 0 {
 			setParts = append(setParts, "set "+strconv.Itoa(set.SetNumber))

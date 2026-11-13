@@ -29,8 +29,7 @@ func testRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 	require.NoError(t, err)
 
 	// migrate the minimal set of tables we touch
-	require.NoError(t, db.AutoMigrate(&models.MuscleGroup{}, &models.WorkoutType{},
-		&models.Training{}, &models.WorkoutSession{}, &models.WorkoutSet{}))
+	require.NoError(t, db.AutoMigrate(&models.MuscleGroup{}, &models.WorkoutType{}, &models.Training{}, &models.WorkoutSession{}, &models.WorkoutSet{}))
 
 	// repositories
 	mgRepo := gormrepository.NewMuscleGroupRepository(db)
@@ -40,7 +39,7 @@ func testRouter(t *testing.T) (*gin.Engine, *gorm.DB) {
 	// handlers
 	mgHandler := handler.NewMuscleGroupHandler(mgRepo)
 	wtHandler := handler.NewWorkoutTypeHandler(wtRepo)
-	trainingHandler := handler.NewTrainingHandler(trainingRepo)
+	trainingHandler := handler.NewTrainingHandler(trainingRepo, wtRepo)
 
 	// stub auth: inject a fixed authenticated user ID for all requests so that
 	// endpoints requiring authorization (e.g., workout-session CRUD) succeed.

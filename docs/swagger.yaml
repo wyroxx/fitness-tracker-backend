@@ -22,6 +22,15 @@ definitions:
     - name
     - password
     type: object
+  handler.exerciseResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   handler.loginRequest:
     properties:
       email:
@@ -64,59 +73,97 @@ definitions:
       refresh_token:
         type: string
     type: object
-  handler.trainingListResponse:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/models.Training'
-        type: array
-      next_cursor:
-        type: string
-    type: object
   handler.trainingRequest:
     properties:
-      finished_at:
-        type: string
-      notes:
-        type: string
       sessions:
         items:
-          $ref: '#/definitions/handler.trainingSessionRequest'
+          $ref: '#/definitions/handler.workoutRequest'
+        type: array
+      started_at:
+        type: string
+      title:
+        type: string
+    required:
+    - sessions
+    - started_at
+    - title
+    type: object
+  handler.workoutExerciseRequest:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      sets:
+        items:
+          $ref: '#/definitions/handler.workoutSetRequest'
+        type: array
+    required:
+    - id
+    - name
+    - sets
+    type: object
+  handler.workoutExerciseResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      sets:
+        items:
+          $ref: '#/definitions/handler.workoutSetResponse'
+        type: array
+    type: object
+  handler.workoutRequest:
+    properties:
+      exercises:
+        items:
+          $ref: '#/definitions/handler.workoutExerciseRequest'
+        type: array
+      started_at:
+        type: string
+      title:
+        type: string
+    required:
+    - exercises
+    - started_at
+    - title
+    type: object
+  handler.workoutResponse:
+    properties:
+      exercises:
+        items:
+          $ref: '#/definitions/handler.workoutExerciseResponse'
         type: array
       started_at:
         type: string
       title:
         type: string
     type: object
-  handler.trainingSessionRequest:
-    properties:
-      datetime:
-        type: string
-      order_index:
-        type: integer
-      sets:
-        items:
-          $ref: '#/definitions/handler.workoutSetRequest'
-        type: array
-      workout_type_id:
-        type: integer
-    required:
-    - workout_type_id
-    type: object
   handler.workoutSetRequest:
     properties:
-      distance_meters:
-        type: number
-      duration_seconds:
+      reps:
+        example: 10
+        minimum: 0
         type: integer
-      notes:
-        type: string
+      set_number:
+        example: 1
+        minimum: 0
+        type: integer
+      weight:
+        description: External load in kilograms; omit for bodyweight exercises.
+        example: 50
+        minimum: 0
+        type: integer
+    type: object
+  handler.workoutSetResponse:
+    properties:
       reps:
         type: integer
       set_number:
         type: integer
-      weight_kg:
-        type: number
+      weight:
+        type: integer
     type: object
   models.MuscleGroup:
     properties:
@@ -124,29 +171,6 @@ definitions:
         type: integer
       name:
         type: string
-    type: object
-  models.Training:
-    properties:
-      created_at:
-        type: string
-      finished_at:
-        type: string
-      id:
-        type: integer
-      notes:
-        type: string
-      sessions:
-        items:
-          $ref: '#/definitions/models.WorkoutSession'
-        type: array
-      started_at:
-        type: string
-      title:
-        type: string
-      updated_at:
-        type: string
-      user_id:
-        type: integer
     type: object
   models.User:
     properties:
@@ -161,74 +185,13 @@ definitions:
       passwordHash:
         type: string
     type: object
-  models.WorkoutSession:
-    properties:
-      datetime:
-        type: string
-      id:
-        type: integer
-      order_index:
-        type: integer
-      sets:
-        items:
-          $ref: '#/definitions/models.WorkoutSet'
-        type: array
-      training:
-        allOf:
-        - $ref: '#/definitions/models.Training'
-        description: Associations
-      training_id:
-        type: integer
-      user_id:
-        type: integer
-      workout_type:
-        $ref: '#/definitions/models.WorkoutType'
-      workout_type_id:
-        type: integer
-    type: object
-  models.WorkoutSet:
-    properties:
-      distance_meters:
-        type: number
-      duration_seconds:
-        type: integer
-      id:
-        type: integer
-      notes:
-        type: string
-      reps:
-        type: integer
-      set_number:
-        type: integer
-      weight_kg:
-        type: number
-      workout_session_id:
-        type: integer
-    type: object
-  models.WorkoutType:
-    properties:
-      default_metric:
-        type: string
-      description:
-        type: string
-      id:
-        type: integer
-      image_url:
-        type: string
-      muscle_group:
-        allOf:
-        - $ref: '#/definitions/models.MuscleGroup'
-        description: Associations
-      muscle_group_id:
-        type: integer
-      name:
-        type: string
-    type: object
 info:
   contact: {}
-  description: API documentation for the Fitness Tracker backend service.
+  description: 'API matching the current FitnessTracker Swift app. GET /trainings
+    returns [Workout]; POST accepts CreateWorkoutRequest with sessions: [Workout].
+    Weight and reps are optional integers.'
   title: Fitness Tracker API
-  version: "1.0"
+  version: "3.0"
 paths:
   /auth/login:
     post:
@@ -341,7 +304,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.WorkoutType'
+              $ref: '#/definitions/handler.exerciseResponse'
             type: array
         "400":
           description: Bad Request
@@ -398,22 +361,17 @@ paths:
       - workout-suggestions
   /trainings:
     get:
-      parameters:
-      - description: Limit
-        in: query
-        name: limit
-        type: integer
-      - description: RFC3339 started_at cursor
-        in: query
-        name: cursor
-        type: string
+      description: Returns all current-user workouts as a bare array matching [Workout]
+        in Swift.
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handler.trainingListResponse'
+            items:
+              $ref: '#/definitions/handler.workoutResponse'
+            type: array
         "400":
           description: Bad Request
           schema:
@@ -434,6 +392,8 @@ paths:
     post:
       consumes:
       - application/json
+      description: sessions contains one Workout with title, started_at and exercises,
+        as sent by the current Swift app.
       parameters:
       - description: Training
         in: body
@@ -447,7 +407,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.Training'
+            $ref: '#/definitions/handler.workoutResponse'
         "400":
           description: Bad Request
           schema:
@@ -462,7 +422,7 @@ paths:
             $ref: '#/definitions/fitness-tracker-backend_workout_handler.errorResponse'
       security:
       - BearerAuth: []
-      summary: Create training with nested sessions and sets
+      summary: Create training from the Swift CreateWorkoutRequest
       tags:
       - trainings
   /trainings/{id}:

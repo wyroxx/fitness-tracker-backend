@@ -20,13 +20,7 @@ func newTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("opening DB: %v", err)
 	}
 
-	if err := db.AutoMigrate(
-		&models.MuscleGroup{},
-		&models.WorkoutType{},
-		&models.Training{},
-		&models.WorkoutSession{},
-		&models.WorkoutSet{},
-	); err != nil {
+	if err := db.AutoMigrate(&models.MuscleGroup{}, &models.WorkoutType{}, &models.Training{}, &models.WorkoutSession{}, &models.WorkoutSet{}); err != nil {
 		t.Fatalf("migrating schema: %v", err)
 	}
 
@@ -164,11 +158,11 @@ func TestWorkoutSessionWithSets(t *testing.T) {
 	}
 
 	reps := 12
-	weight := 80.0
+	weight := 80
 	set := &models.WorkoutSet{
 		WorkoutSessionID: session.ID,
 		SetNumber:        1,
-		WeightKg:         &weight,
+		Weight:           &weight,
 		Reps:             &reps,
 	}
 	if err := setRepo.Create(ctx, set); err != nil {
@@ -203,7 +197,7 @@ func TestTrainingNestedCreate(t *testing.T) {
 	}
 
 	reps := 10
-	weight := 50.0
+	weight := 50
 	training := &models.Training{
 		UserID:    7,
 		Title:     "Chest & Triceps",
@@ -214,7 +208,7 @@ func TestTrainingNestedCreate(t *testing.T) {
 				WorkoutTypeID: wt.ID,
 				Datetime:      time.Now(),
 				Sets: []models.WorkoutSet{
-					{SetNumber: 1, WeightKg: &weight, Reps: &reps},
+					{SetNumber: 1, Weight: &weight, Reps: &reps},
 				},
 			},
 		},

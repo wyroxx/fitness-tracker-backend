@@ -1,8 +1,8 @@
 // Package main boots the Fitness Tracker API server.
 //
 // @title           Fitness Tracker API
-// @version         1.0
-// @description     API documentation for the Fitness Tracker backend service.
+// @version         3.0
+// @description     API matching the current FitnessTracker Swift app. GET /trainings returns [Workout]; POST accepts CreateWorkoutRequest with sessions: [Workout]. Weight and reps are optional integers.
 //
 // @securityDefinitions.apikey BearerAuth
 // @in header
@@ -81,7 +81,7 @@ func main() {
 
 	mgHandler := workouthandler.NewMuscleGroupHandler(muscleGroupRepo)
 	wtHandler := workouthandler.NewWorkoutTypeHandler(workoutTypeRepo)
-	trainingHandler := workouthandler.NewTrainingHandler(trainingRepo)
+	trainingHandler := workouthandler.NewTrainingHandler(trainingRepo, workoutTypeRepo)
 	profileStatsHandler := workouthandler.NewProfileStatsHandler(trainingRepo, workoutSessionRepo)
 
 	llmBaseURL := os.Getenv("GROQ_BASE_URL")
@@ -106,7 +106,7 @@ func main() {
 	} else {
 		corsConfig.AllowOrigins = corsOrigins
 	}
-	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	router.Use(cors.New(corsConfig))
 	router.GET("/healthz", func(c *gin.Context) {

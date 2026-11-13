@@ -3,12 +3,9 @@ package handler
 import "github.com/VibeTeam/fitness-tracker-backend/workout/models"
 
 type workoutSetRequest struct {
-	SetNumber       int      `json:"set_number"`
-	WeightKg        *float64 `json:"weight_kg"`
-	Reps            *int     `json:"reps"`
-	DurationSeconds *int     `json:"duration_seconds"`
-	DistanceMeters  *float64 `json:"distance_meters"`
-	Notes           string   `json:"notes"`
+	SetNumber int  `json:"set_number" binding:"gte=0" example:"1"`
+	Weight    *int `json:"weight" binding:"omitempty,gte=0" example:"50"` // External load in kilograms; omit for bodyweight exercises.
+	Reps      *int `json:"reps" binding:"omitempty,gte=0" example:"10"`
 }
 
 func workoutSetModels(reqs []workoutSetRequest) []models.WorkoutSet {
@@ -19,12 +16,9 @@ func workoutSetModels(reqs []workoutSetRequest) []models.WorkoutSet {
 			setNumber = i + 1
 		}
 		sets[i] = models.WorkoutSet{
-			SetNumber:       setNumber,
-			WeightKg:        req.WeightKg,
-			Reps:            req.Reps,
-			DurationSeconds: req.DurationSeconds,
-			DistanceMeters:  req.DistanceMeters,
-			Notes:           req.Notes,
+			SetNumber: setNumber,
+			Weight:    req.Weight,
+			Reps:      req.Reps,
 		}
 	}
 	return sets

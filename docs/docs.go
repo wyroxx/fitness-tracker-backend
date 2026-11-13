@@ -196,7 +196,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.WorkoutType"
+                                "$ref": "#/definitions/handler.exerciseResponse"
                             }
                         }
                     },
@@ -288,6 +288,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
+                "description": "Returns all current-user workouts as a bare array matching [Workout] in Swift.",
                 "produces": [
                     "application/json"
                 ],
@@ -295,25 +296,14 @@ const docTemplate = `{
                     "trainings"
                 ],
                 "summary": "List trainings for current user",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Limit",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "RFC3339 started_at cursor",
-                        "name": "cursor",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handler.trainingListResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handler.workoutResponse"
+                            }
                         }
                     },
                     "400": {
@@ -342,6 +332,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
+                "description": "sessions contains one Workout with title, started_at and exercises, as sent by the current Swift app.",
                 "consumes": [
                     "application/json"
                 ],
@@ -351,7 +342,7 @@ const docTemplate = `{
                 "tags": [
                     "trainings"
                 ],
-                "summary": "Create training with nested sessions and sets",
+                "summary": "Create training from the Swift CreateWorkoutRequest",
                 "parameters": [
                     {
                         "description": "Training",
@@ -367,7 +358,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.Training"
+                            "$ref": "#/definitions/handler.workoutResponse"
                         }
                     },
                     "400": {
@@ -559,6 +550,20 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.exerciseResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.loginRequest": {
             "type": "object",
             "required": [
@@ -624,33 +629,18 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.trainingListResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Training"
-                    }
-                },
-                "next_cursor": {
-                    "type": "string"
-                }
-            }
-        },
         "handler.trainingRequest": {
             "type": "object",
+            "required": [
+                "sessions",
+                "started_at",
+                "title"
+            ],
             "properties": {
-                "finished_at": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
                 "sessions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/handler.trainingSessionRequest"
+                        "$ref": "#/definitions/handler.workoutRequest"
                     }
                 },
                 "started_at": {
@@ -661,49 +651,116 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.trainingSessionRequest": {
+        "handler.workoutExerciseRequest": {
             "type": "object",
             "required": [
-                "workout_type_id"
+                "id",
+                "name",
+                "sets"
             ],
             "properties": {
-                "datetime": {
-                    "type": "string"
-                },
-                "order_index": {
+                "id": {
                     "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 },
                 "sets": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/handler.workoutSetRequest"
                     }
-                },
-                "workout_type_id": {
+                }
+            }
+        },
+        "handler.workoutExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
                     "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.workoutSetResponse"
+                    }
+                }
+            }
+        },
+        "handler.workoutRequest": {
+            "type": "object",
+            "required": [
+                "exercises",
+                "started_at",
+                "title"
+            ],
+            "properties": {
+                "exercises": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.workoutExerciseRequest"
+                    }
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.workoutResponse": {
+            "type": "object",
+            "properties": {
+                "exercises": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.workoutExerciseResponse"
+                    }
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
         "handler.workoutSetRequest": {
             "type": "object",
             "properties": {
-                "distance_meters": {
-                    "type": "number"
+                "reps": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 10
                 },
-                "duration_seconds": {
-                    "type": "integer"
+                "set_number": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 1
                 },
-                "notes": {
-                    "type": "string"
-                },
+                "weight": {
+                    "description": "External load in kilograms; omit for bodyweight exercises.",
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 50
+                }
+            }
+        },
+        "handler.workoutSetResponse": {
+            "type": "object",
+            "properties": {
                 "reps": {
                     "type": "integer"
                 },
                 "set_number": {
                     "type": "integer"
                 },
-                "weight_kg": {
-                    "type": "number"
+                "weight": {
+                    "type": "integer"
                 }
             }
         },
@@ -715,41 +772,6 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                }
-            }
-        },
-        "models.Training": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "finished_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "sessions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.WorkoutSession"
-                    }
-                },
-                "started_at": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
         },
@@ -772,106 +794,6 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "models.WorkoutSession": {
-            "type": "object",
-            "properties": {
-                "datetime": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "order_index": {
-                    "type": "integer"
-                },
-                "sets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.WorkoutSet"
-                    }
-                },
-                "training": {
-                    "description": "Associations",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.Training"
-                        }
-                    ]
-                },
-                "training_id": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "integer"
-                },
-                "workout_type": {
-                    "$ref": "#/definitions/models.WorkoutType"
-                },
-                "workout_type_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.WorkoutSet": {
-            "type": "object",
-            "properties": {
-                "distance_meters": {
-                    "type": "number"
-                },
-                "duration_seconds": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "reps": {
-                    "type": "integer"
-                },
-                "set_number": {
-                    "type": "integer"
-                },
-                "weight_kg": {
-                    "type": "number"
-                },
-                "workout_session_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.WorkoutType": {
-            "type": "object",
-            "properties": {
-                "default_metric": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "image_url": {
-                    "type": "string"
-                },
-                "muscle_group": {
-                    "description": "Associations",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/models.MuscleGroup"
-                        }
-                    ]
-                },
-                "muscle_group_id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
         }
     },
     "securityDefinitions": {
@@ -886,12 +808,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
+	Version:          "3.0",
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Fitness Tracker API",
-	Description:      "API documentation for the Fitness Tracker backend service.",
+	Description:      "API matching the current FitnessTracker Swift app. GET /trainings returns [Workout]; POST accepts CreateWorkoutRequest with sessions: [Workout]. Weight and reps are optional integers.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

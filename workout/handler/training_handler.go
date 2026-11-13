@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"github.com/VibeTeam/fitness-tracker-backend/shared/middleware"
 	"github.com/VibeTeam/fitness-tracker-backend/workout/models"
@@ -13,11 +15,12 @@ import (
 )
 
 type TrainingHandler struct {
-	repo repository.TrainingRepository
+	repo         repository.TrainingRepository
+	exerciseRepo repository.WorkoutTypeRepository
 }
 
-func NewTrainingHandler(repo repository.TrainingRepository) *TrainingHandler {
-	return &TrainingHandler{repo: repo}
+func NewTrainingHandler(repo repository.TrainingRepository, exerciseRepo repository.WorkoutTypeRepository) *TrainingHandler {
+	return &TrainingHandler{repo: repo, exerciseRepo: exerciseRepo}
 }
 
 func (h *TrainingHandler) RegisterRoutes(r *gin.Engine, auth gin.HandlerFunc) {
@@ -30,41 +33,41 @@ func (h *TrainingHandler) RegisterRoutes(r *gin.Engine, auth gin.HandlerFunc) {
 	}
 }
 
+// trainingRequest matches CreateWorkoutRequest in the Swift app.
 type trainingRequest struct {
-	Title      string                   `json:"title"`
-	StartedAt  time.Time                `json:"started_at"`
-	FinishedAt *time.Time               `json:"finished_at"`
-	Notes      string                   `json:"notes"`
-	Sessions   []trainingSessionRequest `json:"sessions"`
+	Title     string           `json:"title" binding:"required"`
+	StartedAt time.Time        `json:"started_at" binding:"required"`
+	Sessions  []workoutRequest `json:"sessions" binding:"required,len=1,dive"`
 }
 
-type trainingSessionRequest struct {
-	WorkoutTypeID uint                `json:"workout_type_id" binding:"required"`
-	OrderIndex    int                 `json:"order_index"`
-	Datetime      time.Time           `json:"datetime"`
-	Sets          []workoutSetRequest `json:"sets"`
+type workoutRequest struct {
+	Title     string                   `json:"title" binding:"required"`
+	StartedAt time.Time                `json:"started_at" binding:"required"`
+	Exercises []workoutExerciseRequest `json:"exercises" binding:"required,dive"`
 }
 
-type trainingListResponse struct {
-	Items      []*models.Training `json:"items"`
-	NextCursor string             `json:"next_cursor,omitempty"`
+type workoutExerciseRequest struct {
+	ID   uint                `json:"id" binding:"required"`
+	Name string              `json:"name" binding:"required"`
+	Sets []workoutSetRequest `json:"sets" binding:"required,dive"`
 }
 
 // Create training
-// @Summary      Create training with nested sessions and sets
+// @Summary      Create training from the Swift CreateWorkoutRequest
+// @Description  sessions contains one Workout with title, started_at and exercises, as sent by the current Swift app.
 // @Tags         trainings
 // @Security     BearerAuth
 // @Accept       json
 // @Produce      json
 // @Param        payload  body      trainingRequest  true  "Training"
-// @Success      201      {object}  models.Training
+// @Success      201      {object}  workoutResponse
 // @Failure      400      {object}  errorResponse
 // @Failure      401      {object}  errorResponse
 // @Failure      500      {object}  errorResponse
 // @Router       /trainings [post]
 func (h *TrainingHandler) create(c *gin.Context) {
 	var req trainingRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := bindWorkoutJSON(c, &req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -73,36 +76,27 @@ func (h *TrainingHandler) create(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing user"})
 		return
 	}
-	if req.StartedAt.IsZero() {
-		req.StartedAt = time.Now()
+	workout := req.Sessions[0]
+	if req.Title != workout.Title || !req.StartedAt.Equal(workout.StartedAt) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "session title and started_at must match the enclosing training"})
+		return
 	}
-	if req.Title == "" {
-		req.Title = "Workout"
-	}
-
 	training := &models.Training{
-		UserID:     uid,
-		Title:      req.Title,
-		StartedAt:  req.StartedAt,
-		FinishedAt: req.FinishedAt,
-		Notes:      req.Notes,
-		Sessions:   make([]models.WorkoutSession, len(req.Sessions)),
+		UserID: uid, Title: req.Title, StartedAt: req.StartedAt,
+		Sessions: make([]models.WorkoutSession, len(workout.Exercises)),
 	}
-	for i, sessionReq := range req.Sessions {
-		sessionTime := sessionReq.Datetime
-		if sessionTime.IsZero() {
-			sessionTime = req.StartedAt
-		}
-		orderIndex := sessionReq.OrderIndex
-		if orderIndex == 0 {
-			orderIndex = i + 1
+	for i, exercise := range workout.Exercises {
+		if _, err := h.exerciseRepo.GetByID(c.Request.Context(), exercise.ID); err != nil {
+			status := http.StatusInternalServerError
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				status = http.StatusBadRequest
+			}
+			c.JSON(status, gin.H{"error": "exercise could not be loaded"})
+			return
 		}
 		training.Sessions[i] = models.WorkoutSession{
-			UserID:        uid,
-			WorkoutTypeID: sessionReq.WorkoutTypeID,
-			OrderIndex:    orderIndex,
-			Datetime:      sessionTime,
-			Sets:          workoutSetModels(sessionReq.Sets),
+			UserID: uid, WorkoutTypeID: exercise.ID, OrderIndex: i + 1,
+			Datetime: req.StartedAt, Sets: workoutSetModels(exercise.Sets),
 		}
 	}
 
@@ -112,10 +106,10 @@ func (h *TrainingHandler) create(c *gin.Context) {
 	}
 	loaded, err := h.repo.GetByID(c.Request.Context(), training.ID)
 	if err != nil {
-		c.JSON(http.StatusCreated, training)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, loaded)
+	c.JSON(http.StatusCreated, workoutFromTraining(loaded))
 }
 
 // List trainings
@@ -123,9 +117,8 @@ func (h *TrainingHandler) create(c *gin.Context) {
 // @Tags         trainings
 // @Security     BearerAuth
 // @Produce      json
-// @Param        limit   query     int     false  "Limit"
-// @Param        cursor  query     string  false  "RFC3339 started_at cursor"
-// @Success      200     {object} trainingListResponse
+// @Description  Returns all current-user workouts as a bare array matching [Workout] in Swift.
+// @Success      200     {array} workoutResponse
 // @Failure      400     {object}  errorResponse
 // @Failure      401     {object}  errorResponse
 // @Failure      500     {object}  errorResponse
@@ -136,31 +129,14 @@ func (h *TrainingHandler) list(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing user"})
 		return
 	}
-	limit := queryInt(c, "limit", 20)
-	if limit < 1 {
-		limit = 20
-	}
-	if limit > 100 {
-		limit = 100
-	}
-	var cursor *time.Time
-	if raw := c.Query("cursor"); raw != "" {
-		parsed, err := time.Parse(time.RFC3339, raw)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid cursor"})
-			return
-		}
-		cursor = &parsed
-	}
-	trainings, err := h.repo.ListByUser(c.Request.Context(), uid, limit+1, cursor)
+	trainings, err := h.repo.ListByUser(c.Request.Context(), uid, -1, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	resp := trainingListResponse{Items: trainings}
-	if len(trainings) > limit {
-		resp.Items = trainings[:limit]
-		resp.NextCursor = resp.Items[len(resp.Items)-1].StartedAt.Format(time.RFC3339)
+	resp := make([]workoutResponse, len(trainings))
+	for i, training := range trainings {
+		resp[i] = workoutFromTraining(training)
 	}
 	c.JSON(http.StatusOK, resp)
 }
