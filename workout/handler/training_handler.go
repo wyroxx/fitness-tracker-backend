@@ -26,8 +26,6 @@ func (h *TrainingHandler) RegisterRoutes(r *gin.Engine, auth gin.HandlerFunc) {
 	{
 		g.POST("", h.create)
 		g.GET("", h.list)
-		g.GET("/:id", h.getByID)
-		g.PATCH("/:id", h.update)
 		g.DELETE("/:id", h.delete)
 	}
 }
@@ -45,13 +43,6 @@ type trainingSessionRequest struct {
 	OrderIndex    int                 `json:"order_index"`
 	Datetime      time.Time           `json:"datetime"`
 	Sets          []workoutSetRequest `json:"sets"`
-}
-
-type trainingUpdateRequest struct {
-	Title      *string    `json:"title"`
-	StartedAt  *time.Time `json:"started_at"`
-	FinishedAt *time.Time `json:"finished_at"`
-	Notes      *string    `json:"notes"`
 }
 
 type trainingListResponse struct {
@@ -172,93 +163,6 @@ func (h *TrainingHandler) list(c *gin.Context) {
 		resp.NextCursor = resp.Items[len(resp.Items)-1].StartedAt.Format(time.RFC3339)
 	}
 	c.JSON(http.StatusOK, resp)
-}
-
-// Get training
-// @Summary      Get training by ID
-// @Tags         trainings
-// @Security     BearerAuth
-// @Produce      json
-// @Param        id   path      int  true  "Training ID"
-// @Success      200  {object}  models.Training
-// @Failure      400  {object}  errorResponse
-// @Failure      404  {object}  errorResponse
-// @Router       /trainings/{id} [get]
-func (h *TrainingHandler) getByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
-		return
-	}
-	training, err := h.repo.GetByID(c.Request.Context(), uint(id))
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
-	}
-	uid, _ := middleware.UserID(c)
-	if training.UserID != uid {
-		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-		return
-	}
-	c.JSON(http.StatusOK, training)
-}
-
-// Update training
-// @Summary      Update training metadata
-// @Tags         trainings
-// @Security     BearerAuth
-// @Accept       json
-// @Produce      json
-// @Param        id       path      int                    true  "Training ID"
-// @Param        payload  body      trainingUpdateRequest  true  "Update"
-// @Success      200      {object}  models.Training
-// @Failure      400      {object}  errorResponse
-// @Failure      404      {object}  errorResponse
-// @Failure      500      {object}  errorResponse
-// @Router       /trainings/{id} [patch]
-func (h *TrainingHandler) update(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
-		return
-	}
-	training, err := h.repo.GetByID(c.Request.Context(), uint(id))
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
-	}
-	uid, _ := middleware.UserID(c)
-	if training.UserID != uid {
-		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-		return
-	}
-	var req trainingUpdateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if req.Title != nil {
-		training.Title = *req.Title
-	}
-	if req.StartedAt != nil {
-		training.StartedAt = *req.StartedAt
-	}
-	if req.FinishedAt != nil {
-		training.FinishedAt = req.FinishedAt
-	}
-	if req.Notes != nil {
-		training.Notes = *req.Notes
-	}
-	if err := h.repo.Update(c.Request.Context(), training); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	loaded, err := h.repo.GetByID(c.Request.Context(), training.ID)
-	if err != nil {
-		c.JSON(http.StatusOK, training)
-		return
-	}
-	c.JSON(http.StatusOK, loaded)
 }
 
 // Delete training

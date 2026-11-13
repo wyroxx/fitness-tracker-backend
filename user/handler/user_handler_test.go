@@ -114,11 +114,20 @@ func TestCreateUser_Success(t *testing.T) {
 	require.Equal(t, http.StatusCreated, rec.Code)
 }
 
-func TestGetUserByID_NotFound(t *testing.T) {
+func TestRemovedUserRoute_NotFound(t *testing.T) {
 	r, _ := setupRouter()
 
 	req := httptest.NewRequest(http.MethodGet, "/users/99", nil)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 	require.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+func TestUserRoutes(t *testing.T) {
+	r, _ := setupRouter()
+	var routes []string
+	for _, route := range r.Routes() {
+		routes = append(routes, route.Method+" "+route.Path)
+	}
+	require.ElementsMatch(t, []string{"POST /users", "GET /users/me"}, routes)
 }
